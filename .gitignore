@@ -1,3 +1,5 @@
 node_modules
 dist
-
+.conversation_editor_server.pid
+__pycache__/
+*.pyc

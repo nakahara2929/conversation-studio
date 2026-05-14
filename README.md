@@ -131,6 +131,14 @@ npm run preview
 - 公開サイト URL
 - Vercel 管理 URL
 
+### 現在の公開情報
+
+- 公開サイト URL: [https://conversation-studio-delta.vercel.app/](https://conversation-studio-delta.vercel.app/)
+- デプロイ URL: [https://conversation-studio-8g0duc027-tmnakaha2-4602s-projects.vercel.app/](https://conversation-studio-8g0duc027-tmnakaha2-4602s-projects.vercel.app/)
+- GitHub リポジトリ: [https://github.com/nakahara2929/conversation-studio](https://github.com/nakahara2929/conversation-studio)
+
+Vercel の管理画面では、`conversation-studio` プロジェクトを開いて運用します。
+
 ## 今回あえて入れていないもの
 
 - 複雑なドラッグ並び替え
