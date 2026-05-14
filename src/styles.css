@@ -63,31 +63,24 @@ textarea {
   top: 0;
   z-index: 10;
   display: grid;
-  gap: 14px;
-  padding: 18px 16px 16px;
+  gap: 10px;
+  padding: 14px 16px 12px;
   background: rgba(12, 15, 21, 0.94);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(87, 104, 126, 0.28);
 }
 
-.eyebrow {
-  margin: 0 0 4px;
-  color: var(--primary);
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .app-title {
   margin: 0;
-  font-size: clamp(2rem, 8vw, 2.7rem);
+  font-size: clamp(1.9rem, 7vw, 2.5rem);
   line-height: 1.05;
-}
-
-.app-subtitle {
-  margin: 8px 0 0;
-  color: var(--muted);
-  font-size: 1rem;
 }
 
 .save-indicator {
@@ -99,6 +92,10 @@ textarea {
   border-radius: 999px;
   background: rgba(31, 39, 50, 0.9);
   color: var(--muted);
+}
+
+.title-save-indicator {
+  flex-shrink: 0;
 }
 
 .save-dot {
@@ -383,15 +380,6 @@ textarea {
 
 .hidden-input {
   display: none;
-}
-
-.step-footer {
-  margin-top: 4px;
-  padding: 8px 0 0;
-}
-
-.step-footer .button {
-  min-width: 140px;
 }
 
 @media (min-width: 700px) {

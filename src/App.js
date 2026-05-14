@@ -158,40 +158,11 @@ function NavStep({ page, currentPage, disabled, onClick }) {
   );
 }
 
-function StepFooter({ backLabel, onBack, nextLabel, onNext, nextDisabled = false }) {
-  return h(
-    "div",
-    { className: "step-footer" },
-    onBack
-      ? h(
-          "button",
-          { className: "button", type: "button", onClick: onBack },
-          backLabel,
-        )
-      : h("span"),
-    onNext
-      ? h(
-          "button",
-          {
-            className: "button button-primary",
-            type: "button",
-            disabled: nextDisabled,
-            onClick: onNext,
-          },
-          nextLabel,
-        )
-      : null,
-  );
-}
-
 export default function App() {
   const [appState, setAppState] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [saveMessage, setSaveMessage] = useState("読み込み中...");
   const [filters, setFilters] = useState({
-    eventName: "",
-    body: "",
-    character: "",
     status: "all",
     stickyOnly: false,
   });
@@ -440,8 +411,6 @@ export default function App() {
     );
   }
 
-  const canGoData = Boolean(selectedWork);
-  const canGoEvents = Boolean(selectedWork);
   const canGoEditor = Boolean(selectedWork && selectedEvent);
 
   function renderWorksPage() {
@@ -536,11 +505,6 @@ export default function App() {
               onAction: addWork,
             }),
       ),
-      h(StepFooter, {
-        nextLabel: "データ操作へ",
-        onNext: () => moveToPage("data"),
-        nextDisabled: !canGoData,
-      }),
     );
   }
 
@@ -607,13 +571,6 @@ export default function App() {
           onChange: handleJsonImport,
         }),
       ),
-      h(StepFooter, {
-        backLabel: "作品管理へ",
-        onBack: () => moveToPage("works"),
-        nextLabel: "イベント一覧へ",
-        onNext: () => moveToPage("events"),
-        nextDisabled: !canGoEvents,
-      }),
     );
   }
 
@@ -642,24 +599,6 @@ export default function App() {
         h(
           "div",
           { className: "field-grid single-column compact-grid" },
-          h(LabeledInput, {
-            label: "イベント名検索",
-            value: filters.eventName,
-            onChange: (value) => updateFilters({ eventName: value }),
-            placeholder: "イベント名で検索",
-          }),
-          h(LabeledInput, {
-            label: "本文検索",
-            value: filters.body,
-            onChange: (value) => updateFilters({ body: value }),
-            placeholder: "本文の語句で検索",
-          }),
-          h(LabeledInput, {
-            label: "キャラ名検索",
-            value: filters.character,
-            onChange: (value) => updateFilters({ character: value }),
-            placeholder: "Mio, Stitchy など",
-          }),
           h(LabeledSelect, {
             label: "ステータス",
             value: filters.status,
@@ -726,13 +665,6 @@ export default function App() {
               body: "作品がないとイベント一覧は表示できません。",
             }),
       ),
-      h(StepFooter, {
-        backLabel: "データ操作へ",
-        onBack: () => moveToPage("data"),
-        nextLabel: "イベント操作へ",
-        onNext: () => moveToPage("editor"),
-        nextDisabled: !canGoEditor,
-      }),
     );
   }
 
@@ -829,10 +761,6 @@ export default function App() {
               body: "イベント一覧で対象を選ぶと、ここで会話を編集できます。",
             }),
       ),
-      h(StepFooter, {
-        backLabel: "イベント一覧へ",
-        onBack: () => moveToPage("events"),
-      }),
     );
   }
 
@@ -851,16 +779,14 @@ export default function App() {
       { className: "topbar" },
       h(
         "div",
-        null,
-        h("p", { className: "eyebrow" }, "iPhone 縦持ち向け / PWA"),
+        { className: "title-row" },
         h("h1", { className: "app-title" }, "会話エディタ"),
-        h("p", { className: "app-subtitle" }, "作品を選び、順番に進みながら会話を1件ずつ整える構成です。"),
-      ),
-      h(
-        "div",
-        { className: "save-indicator" },
-        h("span", { className: "save-dot" }),
-        h("span", null, saveMessage),
+        h(
+          "div",
+          { className: "save-indicator title-save-indicator" },
+          h("span", { className: "save-dot" }),
+          h("span", null, saveMessage),
+        ),
       ),
       h(
         "nav",
@@ -871,8 +797,8 @@ export default function App() {
             page,
             currentPage: appState.currentPage,
             disabled:
-              (page === "data" && !canGoData) ||
-              (page === "events" && !canGoEvents) ||
+              (page === "data" && !selectedWork) ||
+              (page === "events" && !selectedWork) ||
               (page === "editor" && !canGoEditor),
             onClick: () => moveToPage(page),
           }),
