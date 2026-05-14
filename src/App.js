@@ -722,7 +722,7 @@ export default function App() {
                   onChange: (value) => updateEventField("stickyNote", value),
                   placeholder: "一覧で目立たせたい短いメモ",
                   multiline: true,
-                  rows: 2,
+                  rows: 1,
                 }),
                 h("div", { className: "divider-label" }, "会話本文"),
                 h(LabeledInput, {
@@ -738,12 +738,6 @@ export default function App() {
                   options: TIMING_OPTIONS.map((timing) => ({ value: timing, label: timing })),
                 }),
                 h(LabeledInput, {
-                  label: "登場キャラ",
-                  value: selectedEvent.conversation.characters,
-                  onChange: (value) => updateConversationField("characters", value),
-                  placeholder: "自由入力 / カンマ区切り",
-                }),
-                h(LabeledInput, {
                   label: "本文",
                   value: selectedEvent.conversation.body,
                   onChange: (value) => updateConversationField("body", value),
@@ -753,10 +747,10 @@ export default function App() {
                   rows: 14,
                 }),
                 h(LabeledInput, {
-                  label: "会話メモ",
+                  label: "会話バックアップ",
                   value: selectedEvent.conversation.memo,
                   onChange: (value) => updateConversationField("memo", value),
-                  placeholder: "演出メモや補足",
+                  placeholder: "本文の退避や差し替え前の控え",
                   multiline: true,
                   rows: 5,
                 }),
