@@ -79,8 +79,9 @@ textarea {
 
 .app-title {
   margin: 0;
-  font-size: clamp(1.9rem, 7vw, 2.5rem);
+  font-size: clamp(1.45rem, 5.8vw, 2.2rem);
   line-height: 1.05;
+  letter-spacing: 0.02em;
 }
 
 .save-indicator {
@@ -161,6 +162,13 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -394,7 +402,7 @@ textarea {
   }
 
   .step-nav {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .button-grid-mobile {

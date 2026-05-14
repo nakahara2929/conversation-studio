@@ -12,12 +12,11 @@ import {
 } from "./model.js";
 
 const h = React.createElement;
-const PAGE_ORDER = ["works", "data", "events", "editor"];
+const PAGE_ORDER = ["works", "events"];
 const PAGE_LABELS = {
   works: "作品管理",
-  data: "データ操作",
   events: "イベント一覧",
-  editor: "イベント操作",
+  editor: "イベント編集",
 };
 
 function fieldId(prefix) {
@@ -138,11 +137,13 @@ function repairSelection(state) {
 }
 
 function NavStep({ page, currentPage, disabled, onClick }) {
+  const isActive = currentPage === page || (page === "events" && currentPage === "editor");
+
   return h(
     "button",
     {
       type: "button",
-      className: `step-chip ${currentPage === page ? "is-active" : ""}`,
+      className: `step-chip ${isActive ? "is-active" : ""}`,
       disabled,
       onClick,
     },
@@ -172,7 +173,7 @@ export default function App() {
 
         if (stored) {
           setAppState(normalizeAppState(stored));
-          setSaveMessage("保存データを読み込みました");
+          setSaveMessage("保存済みデータを読み込みました");
         } else {
           setAppState(createSampleState());
           setSaveMessage("サンプルデータを用意しました");
@@ -183,7 +184,7 @@ export default function App() {
           return;
         }
         setAppState(createSampleState());
-        setSaveMessage("保存読込に失敗したためサンプルデータで開始しました");
+        setSaveMessage("読み込みに失敗したためサンプルデータで開始しました");
       })
       .finally(() => {
         if (!cancelled) {
@@ -206,7 +207,12 @@ export default function App() {
     const timerId = window.setTimeout(() => {
       saveState(appState)
         .then(() => {
-          setSaveMessage(`保存済み ${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`);
+          setSaveMessage(
+            `保存済み ${new Date().toLocaleTimeString("ja-JP", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`,
+          );
         })
         .catch(() => {
           setSaveMessage("保存に失敗しました");
@@ -269,6 +275,7 @@ export default function App() {
   function selectEvent(eventId) {
     mutateState((draft) => {
       draft.selectedEventId = eventId;
+      draft.currentPage = "editor";
     });
   }
 
@@ -315,6 +322,7 @@ export default function App() {
       const event = createEvent({ name: `イベント ${work.events.length + 1}` });
       work.events.unshift(event);
       draft.selectedEventId = event.id;
+      draft.currentPage = "editor";
       touchWork(work);
     });
   }
@@ -403,8 +411,6 @@ export default function App() {
     );
   }
 
-  const canGoEditor = Boolean(selectedWork && selectedEvent);
-
   function renderWorksPage() {
     return h(
       Fragment,
@@ -445,46 +451,107 @@ export default function App() {
               ),
               selectedWork
                 ? h(
-                    "div",
-                    { className: "editor-card" },
+                    Fragment,
+                    null,
                     h(
                       "div",
-                      { className: "danger-line" },
-                      h("h3", { className: "subsection-title" }, "選択中の作品"),
+                      { className: "editor-card" },
                       h(
-                        "button",
-                        {
-                          className: "button button-danger",
-                          type: "button",
-                          onClick: () => deleteWork(selectedWork.id),
-                        },
-                        "作品を削除",
+                        "div",
+                        { className: "danger-line" },
+                        h("h3", { className: "subsection-title" }, "選択中の作品"),
+                        h(
+                          "button",
+                          {
+                            className: "button button-danger",
+                            type: "button",
+                            onClick: () => deleteWork(selectedWork.id),
+                          },
+                          "作品を削除",
+                        ),
+                      ),
+                      h(
+                        "div",
+                        { className: "field-grid single-column" },
+                        h(LabeledInput, {
+                          label: "作品名",
+                          value: selectedWork.name,
+                          onChange: (value) => updateWorkField("name", value),
+                          placeholder: "作品名を入力",
+                        }),
+                        h(LabeledInput, {
+                          label: "概要",
+                          value: selectedWork.summary,
+                          onChange: (value) => updateWorkField("summary", value),
+                          placeholder: "作品の概要や全体メモ",
+                          multiline: true,
+                          rows: 4,
+                        }),
+                        h(LabeledInput, {
+                          label: "メモ",
+                          value: selectedWork.memo,
+                          onChange: (value) => updateWorkField("memo", value),
+                          placeholder: "補足メモや設定メモ",
+                          multiline: true,
+                          rows: 5,
+                        }),
                       ),
                     ),
                     h(
                       "div",
-                      { className: "field-grid single-column" },
-                      h(LabeledInput, {
-                        label: "作品名",
-                        value: selectedWork.name,
-                        onChange: (value) => updateWorkField("name", value),
-                        placeholder: "作品名を入力",
-                      }),
-                      h(LabeledInput, {
-                        label: "概要",
-                        value: selectedWork.summary,
-                        onChange: (value) => updateWorkField("summary", value),
-                        placeholder: "作品の目的や全体メモ",
-                        multiline: true,
-                        rows: 4,
-                      }),
-                      h(LabeledInput, {
-                        label: "メモ",
-                        value: selectedWork.memo,
-                        onChange: (value) => updateWorkField("memo", value),
-                        placeholder: "進行メモや管理メモ",
-                        multiline: true,
-                        rows: 5,
+                      { className: "editor-card" },
+                      h("h3", { className: "subsection-title" }, "データ操作"),
+                      h(
+                        "p",
+                        { className: "page-lead" },
+                        `現在の作品: ${selectedWork.name}`,
+                      ),
+                      h(
+                        "div",
+                        { className: "button-grid-mobile" },
+                        h(
+                          "button",
+                          {
+                            className: "button button-primary",
+                            type: "button",
+                            onClick: () => exportJson(appState),
+                          },
+                          "JSON出力",
+                        ),
+                        h(
+                          "button",
+                          {
+                            className: "button",
+                            type: "button",
+                            onClick: () => importInputRef.current?.click(),
+                          },
+                          "JSON読込",
+                        ),
+                        h(
+                          "button",
+                          {
+                            className: "button",
+                            type: "button",
+                            onClick: () => exportEventsCsv(appState),
+                          },
+                          "CSV出力（イベント）",
+                        ),
+                        h(
+                          "button",
+                          {
+                            className: "button",
+                            type: "button",
+                            onClick: () => exportConversationBlocksCsv(appState),
+                          },
+                          "CSV出力（会話）",
+                        ),
+                      ),
+                      h("input", {
+                        ref: importInputRef,
+                        className: "hidden-input",
+                        type: "file",
+                        accept: ".json,application/json",
+                        onChange: handleJsonImport,
                       }),
                     ),
                   )
@@ -492,76 +559,10 @@ export default function App() {
             )
           : h(EmptyState, {
               title: "作品がまだありません",
-              body: "最初の作品を作ると、このあとデータ操作とイベント編集へ進めます。",
+              body: "最初の作品を作ると、このあとイベント一覧と編集へ進めます。",
               actionLabel: "作品を追加",
               onAction: addWork,
             }),
-      ),
-    );
-  }
-
-  function renderDataPage() {
-    return h(
-      Fragment,
-      null,
-      h(
-        "section",
-        { className: "panel page-panel" },
-        h("h2", { className: "section-title" }, "データ操作"),
-        selectedWork
-          ? h(
-              "p",
-              { className: "page-lead" },
-              `現在の作品: ${selectedWork.name}`,
-            )
-          : null,
-        h(
-          "div",
-          { className: "button-grid-mobile" },
-          h(
-            "button",
-            {
-              className: "button button-primary",
-              type: "button",
-              onClick: () => exportJson(appState),
-            },
-            "JSON出力",
-          ),
-          h(
-            "button",
-            {
-              className: "button",
-              type: "button",
-              onClick: () => importInputRef.current?.click(),
-            },
-            "JSON読込",
-          ),
-          h(
-            "button",
-            {
-              className: "button",
-              type: "button",
-              onClick: () => exportEventsCsv(appState),
-            },
-            "CSV出力（イベント）",
-          ),
-          h(
-            "button",
-            {
-              className: "button",
-              type: "button",
-              onClick: () => exportConversationBlocksCsv(appState),
-            },
-            "CSV出力（会話）",
-          ),
-        ),
-        h("input", {
-          ref: importInputRef,
-          className: "hidden-input",
-          type: "file",
-          accept: ".json,application/json",
-          onChange: handleJsonImport,
-        }),
       ),
     );
   }
@@ -650,10 +651,10 @@ export default function App() {
               )
             : h(EmptyState, {
                 title: "条件に合うイベントがありません",
-                body: "検索条件を調整するか、新しいイベントを追加してください。",
+                body: "絞り込み条件を見直すか、新しいイベントを追加してください。",
               })
           : h(EmptyState, {
-              title: "作品を先に作成してください",
+              title: "先に作品を選択してください",
               body: "作品がないとイベント一覧は表示できません。",
             }),
       ),
@@ -670,18 +671,31 @@ export default function App() {
         h(
           "div",
           { className: "danger-line" },
-          h("h2", { className: "section-title" }, "イベント操作"),
-          selectedEvent
-            ? h(
-                "button",
-                {
-                  className: "button button-danger",
-                  type: "button",
-                  onClick: () => deleteEvent(selectedEvent.id),
-                },
-                "イベントを削除",
-              )
-            : null,
+          h("h2", { className: "section-title" }, PAGE_LABELS.editor),
+          h(
+            "div",
+            { className: "header-actions" },
+            h(
+              "button",
+              {
+                className: "button",
+                type: "button",
+                onClick: () => moveToPage("events"),
+              },
+              "一覧へ戻る",
+            ),
+            selectedEvent
+              ? h(
+                  "button",
+                  {
+                    className: "button button-danger",
+                    type: "button",
+                    onClick: () => deleteEvent(selectedEvent.id),
+                  },
+                  "イベントを削除",
+                )
+              : null,
+          ),
         ),
         selectedEvent
           ? h(
@@ -715,7 +729,7 @@ export default function App() {
                   label: "会話タイトル",
                   value: selectedEvent.conversation.conversationTitle,
                   onChange: (value) => updateConversationField("conversationTitle", value),
-                  placeholder: "例: 食卓 / 廊下 / 別れ際",
+                  placeholder: "例: 食卓 / 廊下 / 回想",
                 }),
                 h(LabeledSelect, {
                   label: "タイミング",
@@ -742,7 +756,7 @@ export default function App() {
                   label: "会話メモ",
                   value: selectedEvent.conversation.memo,
                   onChange: (value) => updateConversationField("memo", value),
-                  placeholder: "演出メモや差分条件メモ",
+                  placeholder: "演出メモや補足",
                   multiline: true,
                   rows: 5,
                 }),
@@ -750,7 +764,7 @@ export default function App() {
             )
           : h(EmptyState, {
               title: "イベントを選択してください",
-              body: "イベント一覧で対象を選ぶと、ここで会話を編集できます。",
+              body: "イベント一覧で選ぶと、この画面で編集できます。",
             }),
       ),
     );
@@ -758,7 +772,6 @@ export default function App() {
 
   const pageContent = {
     works: renderWorksPage(),
-    data: renderDataPage(),
     events: renderEventsPage(),
     editor: renderEditorPage(),
   }[appState.currentPage];
@@ -788,10 +801,7 @@ export default function App() {
             key: page,
             page,
             currentPage: appState.currentPage,
-            disabled:
-              (page === "data" && !selectedWork) ||
-              (page === "events" && !selectedWork) ||
-              (page === "editor" && !canGoEditor),
+            disabled: page === "events" && !selectedWork,
             onClick: () => moveToPage(page),
           }),
         ),

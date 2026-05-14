@@ -143,7 +143,11 @@ export function normalizeAppState(value) {
   return {
     version: 2,
     currentPage:
-      ["works", "data", "events", "editor"].includes(value?.currentPage) ? value.currentPage : "works",
+      ["works", "events", "editor"].includes(value?.currentPage)
+        ? value.currentPage
+        : value?.currentPage === "data"
+          ? "works"
+          : "works",
     selectedWorkId: selectedWork?.id ?? null,
     selectedEventId: selectedEvent?.id ?? null,
     works,
