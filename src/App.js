@@ -112,18 +112,10 @@ function EmptyState({ title, body, actionLabel, onAction }) {
 }
 
 function eventMatchesFilters(event, filters) {
-  const nameQuery = filters.eventName.trim().toLowerCase();
-  const bodyQuery = filters.body.trim().toLowerCase();
-  const characterQuery = filters.character.trim().toLowerCase();
-
-  const matchesName = !nameQuery || event.name.toLowerCase().includes(nameQuery);
-  const matchesBody = !bodyQuery || event.conversation.body.toLowerCase().includes(bodyQuery);
-  const matchesCharacter =
-    !characterQuery || event.conversation.characters.toLowerCase().includes(characterQuery);
   const matchesStatus = filters.status === "all" || event.status === filters.status;
   const matchesSticky = !filters.stickyOnly || Boolean(event.stickyNote.trim());
 
-  return matchesName && matchesBody && matchesCharacter && matchesStatus && matchesSticky;
+  return matchesStatus && matchesSticky;
 }
 
 function repairSelection(state) {
