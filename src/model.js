@@ -9,7 +9,17 @@ function asText(value, fallback = "") {
 }
 
 function validStatus(value) {
-  return STATUS_OPTIONS.includes(value) ? value : STATUS_OPTIONS[0];
+  if (STATUS_OPTIONS.includes(value)) {
+    return value;
+  }
+
+  const legacyMap = {
+    下書き: "作業中",
+    要修正: "作業中",
+    FIX: "完了",
+  };
+
+  return legacyMap[value] ?? STATUS_OPTIONS[0];
 }
 
 function validTiming(value) {
@@ -89,7 +99,7 @@ export function createSampleState() {
     events: [
       {
         name: "食卓を調べた時",
-        status: "下書き",
+        status: "作業中",
         conversation: {
           conversationTitle: "食卓",
           timing: "初回",
@@ -115,7 +125,7 @@ export function createSampleState() {
       },
       {
         name: "ドアを調べた時",
-        status: "要修正",
+        status: "完了",
         conversation: {
           conversationTitle: "ドア",
           timing: "進行後",

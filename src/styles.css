@@ -347,10 +347,14 @@ textarea {
 }
 
 .event-card-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   padding: 0 14px 14px;
-  flex-wrap: wrap;
+}
+
+.event-card-actions .button {
+  width: 100%;
 }
 
 .event-item-title {
@@ -382,6 +386,11 @@ textarea {
   border: 1px dashed rgba(103, 200, 255, 0.24);
   border-radius: 18px;
   background: rgba(17, 23, 31, 0.55);
+}
+
+.editor-footer {
+  display: grid;
+  margin-top: 4px;
 }
 
 .empty-title {

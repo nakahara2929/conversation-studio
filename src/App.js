@@ -139,6 +139,7 @@ export default function App() {
   const [saveMessage, setSaveMessage] = useState("読み込み中...");
   const [filters, setFilters] = useState({ status: "all" });
   const importInputRef = useRef(null);
+  const editorTouchRef = useRef(null);
   const deferredFilters = useDeferredValue(filters);
 
   useEffect(() => {
@@ -410,6 +411,31 @@ export default function App() {
           importInputRef.current.value = "";
         }
       });
+  }
+
+  function handleEditorTouchStart(event) {
+    const touch = event.touches?.[0];
+    if (!touch) {
+      return;
+    }
+    editorTouchRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleEditorTouchEnd(event) {
+    const touch = event.changedTouches?.[0];
+    const start = editorTouchRef.current;
+    editorTouchRef.current = null;
+
+    if (!touch || !start) {
+      return;
+    }
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = Math.abs(touch.clientY - start.y);
+
+    if (start.x <= 48 && deltaX >= 88 && deltaY <= 56) {
+      moveToPage("events");
+    }
   }
 
   if (!appState) {
@@ -720,7 +746,11 @@ export default function App() {
       null,
       h(
         "section",
-        { className: "panel page-panel" },
+        {
+          className: "panel page-panel",
+          onTouchStart: handleEditorTouchStart,
+          onTouchEnd: handleEditorTouchEnd,
+        },
         h(
           "div",
           { className: "danger-line" },
@@ -737,17 +767,6 @@ export default function App() {
               },
               "一覧へ戻る",
             ),
-            selectedEvent
-              ? h(
-                  "button",
-                  {
-                    className: "button button-danger",
-                    type: "button",
-                    onClick: () => deleteEvent(selectedEvent.id),
-                  },
-                  "イベントを削除",
-                )
-              : null,
           ),
         ),
         selectedEvent
@@ -798,6 +817,19 @@ export default function App() {
                   multiline: true,
                   rows: 5,
                 }),
+                h(
+                  "div",
+                  { className: "editor-footer" },
+                  h(
+                    "button",
+                    {
+                      className: "button button-danger",
+                      type: "button",
+                      onClick: () => deleteEvent(selectedEvent.id),
+                    },
+                    "イベントを削除",
+                  ),
+                ),
               ),
             )
           : h(EmptyState, {
