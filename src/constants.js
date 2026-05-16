@@ -16,4 +16,3 @@ export const TIMING_OPTIONS = [
   "エンディング前",
   "その他",
 ];
-

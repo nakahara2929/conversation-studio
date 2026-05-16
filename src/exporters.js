@@ -52,12 +52,11 @@ export function exportEventsCsv(state) {
       "作品名",
       "イベント名",
       "ステータス",
-      "付箋",
       "会話タイトル",
       "タイミング",
       "登場キャラ",
       "本文",
-      "会話メモ",
+      "会話バックアップ",
     ],
   ];
 
@@ -67,7 +66,6 @@ export function exportEventsCsv(state) {
         work.name,
         event.name,
         event.status,
-        event.stickyNote,
         event.conversation.conversationTitle,
         event.conversation.timing,
         event.conversation.characters,
@@ -95,7 +93,7 @@ export function exportConversationBlocksCsv(state) {
       "タイミング",
       "登場キャラ",
       "本文",
-      "会話メモ",
+      "会話バックアップ",
     ],
   ];
 

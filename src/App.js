@@ -3,6 +3,7 @@ import { STATUS_META, STATUS_OPTIONS, TIMING_OPTIONS } from "./constants.js";
 import { loadState, saveState } from "./db.js";
 import { exportConversationBlocksCsv, exportEventsCsv, exportJson } from "./exporters.js";
 import {
+  cloneEvent,
   createEvent,
   createSampleState,
   createWork,
@@ -36,7 +37,7 @@ function LabeledInput({
   return h(
     "label",
     { className: "field", htmlFor: id },
-    h("span", { className: "field-label" }, label),
+    label ? h("span", { className: "field-label" }, label) : null,
     multiline
       ? h("textarea", {
           id,
@@ -78,22 +79,6 @@ function LabeledSelect({ label, value, onChange, options }) {
   );
 }
 
-function ToggleField({ label, checked, onChange }) {
-  const id = useMemo(() => fieldId("toggle"), []);
-
-  return h(
-    "label",
-    { className: "toggle-field", htmlFor: id },
-    h("input", {
-      id,
-      type: "checkbox",
-      checked,
-      onChange: (event) => onChange(event.target.checked),
-    }),
-    h("span", null, label),
-  );
-}
-
 function EmptyState({ title, body, actionLabel, onAction }) {
   return h(
     "div",
@@ -111,10 +96,7 @@ function EmptyState({ title, body, actionLabel, onAction }) {
 }
 
 function eventMatchesFilters(event, filters) {
-  const matchesStatus = filters.status === "all" || event.status === filters.status;
-  const matchesSticky = !filters.stickyOnly || Boolean(event.stickyNote.trim());
-
-  return matchesStatus && matchesSticky;
+  return filters.status === "all" || event.status === filters.status;
 }
 
 function repairSelection(state) {
@@ -155,10 +137,7 @@ export default function App() {
   const [appState, setAppState] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [saveMessage, setSaveMessage] = useState("読み込み中...");
-  const [filters, setFilters] = useState({
-    status: "all",
-    stickyOnly: false,
-  });
+  const [filters, setFilters] = useState({ status: "all" });
   const importInputRef = useRef(null);
   const deferredFilters = useDeferredValue(filters);
 
@@ -327,6 +306,43 @@ export default function App() {
     });
   }
 
+  function duplicateEvent(eventId) {
+    mutateState((draft) => {
+      const work = draft.works.find((item) => item.id === draft.selectedWorkId);
+      if (!work) {
+        return;
+      }
+      const index = work.events.findIndex((item) => item.id === eventId);
+      if (index < 0) {
+        return;
+      }
+      const copied = cloneEvent(work.events[index]);
+      work.events.splice(index + 1, 0, copied);
+      draft.selectedEventId = copied.id;
+      touchWork(work);
+    });
+  }
+
+  function moveEvent(eventId, direction) {
+    mutateState((draft) => {
+      const work = draft.works.find((item) => item.id === draft.selectedWorkId);
+      if (!work) {
+        return;
+      }
+      const index = work.events.findIndex((item) => item.id === eventId);
+      if (index < 0) {
+        return;
+      }
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= work.events.length) {
+        return;
+      }
+      const [moved] = work.events.splice(index, 1);
+      work.events.splice(targetIndex, 0, moved);
+      touchWork(work);
+    });
+  }
+
   function deleteEvent(eventId) {
     const event = selectedWork?.events.find((item) => item.id === eventId);
     if (!event || !window.confirm(`イベント「${event.name}」を削除しますか？`)) {
@@ -445,7 +461,6 @@ export default function App() {
                       onClick: () => selectWork(work.id),
                     },
                     h("strong", { className: "work-card-title" }, work.name),
-                    h("span", { className: "work-card-sub" }, `${work.events.length}件のイベント`),
                   ),
                 ),
               ),
@@ -567,6 +582,51 @@ export default function App() {
     );
   }
 
+  function renderEventActions(eventItem, originalIndex, total) {
+    return h(
+      "div",
+      { className: "event-card-actions" },
+      h(
+        "button",
+        {
+          className: "button button-small",
+          type: "button",
+          disabled: originalIndex === 0,
+          onClick: (event) => {
+            event.stopPropagation();
+            moveEvent(eventItem.id, -1);
+          },
+        },
+        "↑",
+      ),
+      h(
+        "button",
+        {
+          className: "button button-small",
+          type: "button",
+          disabled: originalIndex === total - 1,
+          onClick: (event) => {
+            event.stopPropagation();
+            moveEvent(eventItem.id, 1);
+          },
+        },
+        "↓",
+      ),
+      h(
+        "button",
+        {
+          className: "button button-small",
+          type: "button",
+          onClick: (event) => {
+            event.stopPropagation();
+            duplicateEvent(eventItem.id);
+          },
+        },
+        "複製",
+      ),
+    );
+  }
+
   function renderEventsPage() {
     return h(
       Fragment,
@@ -600,58 +660,51 @@ export default function App() {
               STATUS_OPTIONS.map((status) => ({ value: status, label: status })),
             ),
           }),
-          h(ToggleField, {
-            label: "付箋ありのみ",
-            checked: filters.stickyOnly,
-            onChange: (value) => updateFilters({ stickyOnly: value }),
-          }),
         ),
         selectedWork
           ? filteredEvents.length
             ? h(
                 "div",
                 { className: "stack-list" },
-                filteredEvents.map((eventItem) =>
-                  h(
-                    "button",
+                filteredEvents.map((eventItem) => {
+                  const originalIndex = selectedWork.events.findIndex((item) => item.id === eventItem.id);
+                  return h(
+                    "div",
                     {
                       key: eventItem.id,
-                      type: "button",
                       className: `event-card ${eventItem.id === appState.selectedEventId ? "is-active" : ""}`,
-                      onClick: () => selectEvent(eventItem.id),
                     },
                     h("span", {
                       className: "event-status-bar",
                       style: { backgroundColor: STATUS_META[eventItem.status].color },
                     }),
                     h(
-                      "div",
-                      { className: "event-card-body" },
+                      "button",
+                      {
+                        type: "button",
+                        className: "event-card-main",
+                        onClick: () => selectEvent(eventItem.id),
+                      },
                       h(
                         "div",
-                        { className: "event-item-head" },
+                        { className: "event-card-body" },
                         h("strong", { className: "event-item-title" }, eventItem.name),
-                        eventItem.stickyNote.trim()
-                          ? h("span", { className: "sticky-badge" }, "付箋")
-                          : null,
+                        h(
+                          "div",
+                          { className: "event-meta" },
+                          h("span", null, eventItem.status),
+                          h("span", null, eventItem.conversation.timing),
+                        ),
+                        h("p", { className: "event-summary" }, eventItem.conversation.body || "本文未入力"),
                       ),
-                      h(
-                        "div",
-                        { className: "event-meta" },
-                        h("span", null, eventItem.status),
-                        h("span", null, eventItem.conversation.timing),
-                      ),
-                      eventItem.stickyNote.trim()
-                        ? h("p", { className: "sticky-preview" }, eventItem.stickyNote)
-                        : null,
-                      h("p", { className: "event-summary" }, eventItem.conversation.body || "本文未入力"),
                     ),
-                  ),
-                ),
+                    renderEventActions(eventItem, originalIndex, selectedWork.events.length),
+                  );
+                }),
               )
             : h(EmptyState, {
                 title: "条件に合うイベントがありません",
-                body: "絞り込み条件を見直すか、新しいイベントを追加してください。",
+                body: "ステータス条件を見直すか、新しいイベントを追加してください。",
               })
           : h(EmptyState, {
               title: "先に作品を選択してください",
@@ -678,7 +731,7 @@ export default function App() {
             h(
               "button",
               {
-                className: "button",
+                className: "button button-primary",
                 type: "button",
                 onClick: () => moveToPage("events"),
               },
@@ -716,15 +769,6 @@ export default function App() {
                   onChange: (value) => updateEventField("status", value),
                   options: STATUS_OPTIONS.map((status) => ({ value: status, label: status })),
                 }),
-                h(LabeledInput, {
-                  label: "付箋メモ",
-                  value: selectedEvent.stickyNote,
-                  onChange: (value) => updateEventField("stickyNote", value),
-                  placeholder: "一覧で目立たせたい短いメモ",
-                  multiline: true,
-                  rows: 1,
-                }),
-                h("div", { className: "divider-label" }, "会話本文"),
                 h(LabeledInput, {
                   label: "会話タイトル",
                   value: selectedEvent.conversation.conversationTitle,

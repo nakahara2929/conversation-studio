@@ -209,6 +209,12 @@ textarea {
   border-color: rgba(248, 113, 113, 0.45);
 }
 
+.button-small {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
 .field-grid,
 .stack-list,
 .button-grid-mobile {
@@ -325,10 +331,26 @@ textarea {
   min-height: 100%;
 }
 
+.event-card-main {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
 .event-card-body {
   display: grid;
   gap: 10px;
   padding: 14px;
+}
+
+.event-card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 14px;
+  flex-wrap: wrap;
 }
 
 .event-item-title {
@@ -350,25 +372,6 @@ textarea {
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
-}
-
-.sticky-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255, 211, 107, 0.22);
-  color: #ffe49e;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.sticky-preview {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255, 211, 107, 0.14);
-  color: #f7e0a0;
 }
 
 .empty-card {

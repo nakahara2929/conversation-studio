@@ -48,13 +48,23 @@ export function createEvent(overrides = {}) {
     id: asText(overrides.id, makeId("event")),
     name: asText(overrides.name, "新しいイベント"),
     status: validStatus(overrides.status),
-    stickyNote: asText(overrides.stickyNote),
     createdAt: asText(overrides.createdAt, nowIso()),
     updatedAt: asText(overrides.updatedAt, nowIso()),
     conversation: normalizeConversationFromLegacy(
       overrides.conversation ?? overrides.conversations,
     ),
   };
+}
+
+export function cloneEvent(source) {
+  return createEvent({
+    name: source.name.trim() ? `${source.name} コピー` : "イベント コピー",
+    status: source.status,
+    conversation: {
+      ...source.conversation,
+      id: undefined,
+    },
+  });
 }
 
 export function createWork(overrides = {}) {
@@ -74,13 +84,12 @@ export function createWork(overrides = {}) {
 export function createSampleState() {
   const work = createWork({
     name: "サンプル作品",
-    summary: "会話エディタの動作確認用サンプルです。",
-    memo: "iPhone の縦持ちで確認しやすいように、会話イベントを順に追える構成です。",
+    summary: "会話エディタの初期確認用サンプルです。",
+    memo: "iPhone の縦持ちで確認しやすいよう、会話イベントを3件入れています。",
     events: [
       {
         name: "食卓を調べた時",
         status: "下書き",
-        stickyNote: "テンポ確認",
         conversation: {
           conversationTitle: "食卓",
           timing: "初回",
@@ -90,7 +99,7 @@ export function createSampleState() {
             "Stitchy「見りゃわかるだろ。食レポするなよ」",
             "Mio「するわけないでしょ」",
           ].join("\n"),
-          memo: "導入の軽口。空気感の基準。",
+          memo: "差し替え前の本文や別案を残す欄。",
         },
       },
       {
@@ -100,30 +109,29 @@ export function createSampleState() {
           conversationTitle: "絵画",
           timing: "初回",
           characters: "Mio",
-          body: "Mio「妙に目が合う……気のせいじゃないよね」",
+          body: "Mio「妙に視線を感じる……ただの絵なのに」",
           memo: "",
         },
       },
       {
         name: "ドアを調べた時",
         status: "要修正",
-        stickyNote: "分岐条件を後で反映",
         conversation: {
           conversationTitle: "ドア",
           timing: "進行後",
           characters: "Mio, Stitchy",
           body: [
-            "Mio「この先、行くしかないか」",
-            "Stitchy「帰り道がある保証もねぇけどな」",
+            "Mio「この先、開く気がしないんだけど」",
+            "Stitchy「だから進める前に見回れって言ったんだ」",
           ].join("\n"),
-          memo: "前イベントの結果で変化予定。",
+          memo: "後半用の差分案あり。",
         },
       },
     ],
   });
 
   return {
-    version: 2,
+    version: 3,
     currentPage: "works",
     selectedWorkId: work.id,
     selectedEventId: work.events[0]?.id ?? null,
@@ -141,13 +149,11 @@ export function normalizeAppState(value) {
     null;
 
   return {
-    version: 2,
+    version: 3,
     currentPage:
       ["works", "events", "editor"].includes(value?.currentPage)
         ? value.currentPage
-        : value?.currentPage === "data"
-          ? "works"
-          : "works",
+        : "works",
     selectedWorkId: selectedWork?.id ?? null,
     selectedEventId: selectedEvent?.id ?? null,
     works,
