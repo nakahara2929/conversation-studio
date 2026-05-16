@@ -1,4 +1,12 @@
-import React, { Fragment, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  Fragment,
+  startTransition,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { STATUS_META, STATUS_OPTIONS, TIMING_OPTIONS } from "./constants.js";
 import { loadState, saveState } from "./db.js";
 import { exportConversationBlocksCsv, exportEventsCsv, exportJson } from "./exporters.js";
@@ -138,6 +146,7 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [saveMessage, setSaveMessage] = useState("読み込み中...");
   const [filters, setFilters] = useState({ status: "all" });
+  const [aiState, setAiState] = useState({ loading: false, error: "", provider: "" });
   const importInputRef = useRef(null);
   const editorTouchRef = useRef(null);
   const deferredFilters = useDeferredValue(filters);
@@ -222,6 +231,10 @@ export default function App() {
     }
     return selectedWork.events.filter((event) => eventMatchesFilters(event, deferredFilters));
   }, [deferredFilters, selectedWork]);
+
+  useEffect(() => {
+    setAiState({ loading: false, error: "", provider: "" });
+  }, [selectedEvent?.id]);
 
   function mutateState(mutator) {
     setAppState((current) => {
@@ -387,6 +400,76 @@ export default function App() {
     });
   }
 
+  async function generateConversationBody() {
+    if (!selectedWork || !selectedEvent) {
+      return;
+    }
+
+    setAiState({ loading: true, error: "", provider: "" });
+
+    try {
+      const response = await fetch("/api/generate-conversation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          work: {
+            name: selectedWork.name,
+            summary: selectedWork.summary,
+            memo: selectedWork.memo,
+          },
+          event: {
+            name: selectedEvent.name,
+            status: selectedEvent.status,
+          },
+          conversation: {
+            title: selectedEvent.conversation.conversationTitle,
+            timing: selectedEvent.conversation.timing,
+            characters: selectedEvent.conversation.characters,
+            body: selectedEvent.conversation.body,
+            backup: selectedEvent.conversation.memo,
+          },
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.body) {
+        throw new Error(payload.error || "AI生成に失敗しました。");
+      }
+
+      mutateState((draft) => {
+        const work = draft.works.find((item) => item.id === draft.selectedWorkId);
+        const event = work?.events.find((item) => item.id === draft.selectedEventId);
+        if (!work || !event) {
+          return;
+        }
+
+        const currentBody = event.conversation.body.trim();
+        const currentBackup = event.conversation.memo.trim();
+        if (currentBody && !currentBackup) {
+          event.conversation.memo = currentBody;
+        }
+
+        event.conversation.body = payload.body.trim();
+        touchEvent(event);
+        touchWork(work);
+      });
+
+      setAiState({
+        loading: false,
+        error: "",
+        provider: payload.provider === "openai" ? "OpenAI" : "Gemini",
+      });
+    } catch (error) {
+      setAiState({
+        loading: false,
+        error: error instanceof Error ? error.message : "AI生成に失敗しました。",
+        provider: "",
+      });
+    }
+  }
+
   function handleJsonImport(event) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -542,11 +625,7 @@ export default function App() {
                       "div",
                       { className: "editor-card" },
                       h("h3", { className: "subsection-title" }, "データ操作"),
-                      h(
-                        "p",
-                        { className: "page-lead" },
-                        `現在の作品: ${selectedWork.name}`,
-                      ),
+                      h("p", { className: "page-lead" }, `現在の作品: ${selectedWork.name}`),
                       h(
                         "div",
                         { className: "button-grid-mobile" },
@@ -800,15 +879,38 @@ export default function App() {
                   onChange: (value) => updateConversationField("timing", value),
                   options: TIMING_OPTIONS.map((timing) => ({ value: timing, label: timing })),
                 }),
-                h(LabeledInput, {
-                  label: "本文",
-                  value: selectedEvent.conversation.body,
-                  onChange: (value) => updateConversationField("body", value),
-                  placeholder:
-                    "Mio「……ここ、前にも来た気がする」\nStitchy「気のせいってことにしとけ」",
-                  multiline: true,
-                  rows: 14,
-                }),
+                h(
+                  "label",
+                  { className: "field" },
+                  h(
+                    "div",
+                    { className: "field-header" },
+                    h("span", { className: "field-label" }, "本文"),
+                    h(
+                      "button",
+                      {
+                        className: "button button-small button-primary",
+                        type: "button",
+                        onClick: generateConversationBody,
+                        disabled: aiState.loading,
+                      },
+                      aiState.loading ? "AI生成中..." : "AI生成",
+                    ),
+                  ),
+                  h("textarea", {
+                    className: "field-input field-textarea",
+                    value: selectedEvent.conversation.body,
+                    rows: 14,
+                    placeholder:
+                      "Mio「……ここ、前にも来た気がする」\nStitchy「気のせいってことにしとけ」",
+                    onChange: (event) => updateConversationField("body", event.target.value),
+                  }),
+                  aiState.error
+                    ? h("p", { className: "field-note field-note-error" }, aiState.error)
+                    : aiState.provider
+                      ? h("p", { className: "field-note" }, `${aiState.provider} で本文を生成しました。`)
+                      : null,
+                ),
                 h(LabeledInput, {
                   label: "会話バックアップ",
                   value: selectedEvent.conversation.memo,
