@@ -210,9 +210,10 @@ textarea {
 }
 
 .button-small {
-  min-height: 40px;
-  padding: 8px 12px;
+  min-height: 38px;
+  padding: 8px 10px;
   border-radius: 12px;
+  font-size: 0.88rem;
 }
 
 .field-grid,
@@ -348,13 +349,15 @@ textarea {
 
 .event-card-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 44px 44px minmax(72px, 1fr);
   gap: 8px;
   padding: 0 14px 14px;
+  align-items: stretch;
 }
 
 .event-card-actions .button {
   width: 100%;
+  white-space: nowrap;
 }
 
 .event-item-title {

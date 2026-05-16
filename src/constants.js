@@ -1,9 +1,9 @@
 export const STATUS_OPTIONS = ["未着手", "作業中", "完了"];
 
 export const STATUS_META = {
-  未着手: { color: "#6b7280" },
-  作業中: { color: "#3b82f6" },
-  完了: { color: "#22c55e" },
+  未着手: { color: "#5f8f74" },
+  作業中: { color: "#b59a52" },
+  完了: { color: "#5c9fbe" },
 };
 
 export const TIMING_OPTIONS = [
