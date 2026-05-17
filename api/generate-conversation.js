@@ -14,7 +14,6 @@ function buildPrompt(payload) {
     `作品メモ: ${work.memo || ""}`,
     `イベント名: ${event.name || ""}`,
     `イベントの進行状況: ${event.status || ""}`,
-    `会話タイトル: ${conversation.title || ""}`,
     `タイミング: ${conversation.timing || ""}`,
     `登場キャラの参考: ${conversation.characters || ""}`,
     `現在の本文: ${conversation.body || ""}`,

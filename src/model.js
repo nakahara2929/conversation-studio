@@ -33,7 +33,6 @@ export function nowIso() {
 export function createConversationBlock(overrides = {}) {
   return {
     id: asText(overrides.id, makeId("conv")),
-    conversationTitle: asText(overrides.conversationTitle, "会話"),
     timing: validTiming(overrides.timing),
     characters: asText(overrides.characters),
     body: asText(overrides.body),
@@ -101,7 +100,6 @@ export function createSampleState() {
         name: "食卓を調べた時",
         status: "作業中",
         conversation: {
-          conversationTitle: "食卓",
           timing: "初回",
           characters: "Mio, Stitchy",
           body: [
@@ -116,7 +114,6 @@ export function createSampleState() {
         name: "絵画を調べた時",
         status: "未着手",
         conversation: {
-          conversationTitle: "絵画",
           timing: "初回",
           characters: "Mio",
           body: "Mio「妙に視線を感じる……ただの絵なのに」",
@@ -127,7 +124,6 @@ export function createSampleState() {
         name: "ドアを調べた時",
         status: "完了",
         conversation: {
-          conversationTitle: "ドア",
           timing: "進行後",
           characters: "Mio, Stitchy",
           body: [

@@ -424,7 +424,6 @@ export default function App() {
             status: selectedEvent.status,
           },
           conversation: {
-            title: selectedEvent.conversation.conversationTitle,
             timing: selectedEvent.conversation.timing,
             characters: selectedEvent.conversation.characters,
             body: selectedEvent.conversation.body,
@@ -866,12 +865,6 @@ export default function App() {
                   value: selectedEvent.status,
                   onChange: (value) => updateEventField("status", value),
                   options: STATUS_OPTIONS.map((status) => ({ value: status, label: status })),
-                }),
-                h(LabeledInput, {
-                  label: "会話タイトル",
-                  value: selectedEvent.conversation.conversationTitle,
-                  onChange: (value) => updateConversationField("conversationTitle", value),
-                  placeholder: "例: 食卓 / 廊下 / 回想",
                 }),
                 h(LabeledSelect, {
                   label: "タイミング",
